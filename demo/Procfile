@@ -1,0 +1,3 @@
+redis: redis-server -P $REDIS_PORT
+web: python3 server.py
+webgo: go run web.go

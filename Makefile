@@ -54,5 +54,8 @@ coverage: clean
 testrace: verifiers
 	go test -v -race -vet=off ./...
 
+run: 
+	go run main.go
+	
 clean:
 	rm ./coverage -rf

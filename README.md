@@ -1,5 +1,10 @@
 # Ginit
 
+Ginit is a Golang version of the popular [Foreman](https://ddollar.github.io/foreman/) tool.
+Supports linux OS
+
+> Foreman is a manager for Procfile-based applications. Its aim is to abstract away the details of the Procfile format, and allow you to either run your application directly or export it to some other process management format.
+
 ## How to use
 
 ## Testing
