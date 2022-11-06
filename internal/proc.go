@@ -131,7 +131,11 @@ func (gs *GinitService) startProcs() error {
 	errCh := make(chan error, 1)
 
 	for _, proc := range gs.procs {
-		gs.startProc(proc.name, &wg, errCh)
+		err := gs.startProc(proc.name, &wg, errCh)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	allProcsDone := make(chan bool, 1)
@@ -144,7 +148,10 @@ func (gs *GinitService) startProcs() error {
 		select {
 		case err := <-errCh:
 			if gs.exitOnError {
-				gs.stopProcs(os.Interrupt)
+				stopErr := gs.stopProcs(os.Interrupt)
+				if stopErr != nil {
+					return stopErr
+				}
 				return err
 			}
 		case <-allProcsDone:
