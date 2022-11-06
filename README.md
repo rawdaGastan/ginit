@@ -7,6 +7,12 @@ Supports linux OS
 
 ## How to use
 
+- There is a demo folder in the project you can use:
+
+- build `task build` or `make build`
+
+- Run cmd `./bin/ginit start -f demo/Procfile -e demo/.env`
+
 ## Testing
 
 Use these command to run the tests
@@ -39,9 +45,9 @@ make coverage
 Use these command to run the tests
 
 ```bash
-make benchmarks
+task benchmarks
 ```
 
 ```bash
-task benchmarks
+make benchmarks
 ```

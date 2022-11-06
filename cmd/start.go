@@ -16,37 +16,51 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"fmt"
+	"os"
 
+	"github.com/rawdaGastan/ginit/internal"
+	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
 
 // startCmd represents the start command
 var startCmd = &cobra.Command{
 	Use:   "start",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Start execution of procfile",
+	Long:  `Execute each proc in the procfile with order`,
 	Run: func(cmd *cobra.Command, args []string) {
-		//var procfile = flag.String("f", "Procfile", "proc file")
 		fmt.Println("start called")
+
+		procfile, err := cmd.Flags().GetString("procfile")
+		if err != nil {
+			fmt.Printf("err: %v\n", err)
+			return
+		}
+
+		envfile, err := cmd.Flags().GetString("env")
+		if err != nil {
+			fmt.Printf("err: %v\n", err)
+			return
+		}
+
+		logger := zerolog.New(os.Stdout).With().Logger()
+
+		ginit := internal.NewGinitService(procfile, envfile, args, logger)
+
+		err = ginit.Start(context.Background())
+
+		if err != nil {
+			fmt.Printf("err: %v\n", err)
+			return
+		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(startCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// startCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// startCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	startCmd.Flags().StringP("procfile", "f", "", "Enter your procfile path")
+	startCmd.Flags().StringP("env", "e", "", "Enter your env path")
 }
