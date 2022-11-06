@@ -44,6 +44,7 @@ func NewGinitService(procfile string, envfile string, args []string, logger zero
 		exitOnError: true,
 		sig:         sig,
 		logger:      logger,
+		env:         os.Environ(),
 	}
 }
 
@@ -65,7 +66,7 @@ func (gs *GinitService) Start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	gs.env = Loadenv(content)
+	gs.env = append(gs.env, Loadenv(content)...)
 
 	// start
 	ctx, cancel := context.WithCancel(ctx)
