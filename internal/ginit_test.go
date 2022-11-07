@@ -9,6 +9,24 @@ import (
 	"github.com/rs/zerolog"
 )
 
+func BenchmarkTestStartGinit(b *testing.B) {
+
+	b.Run("test_start", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			logger := zerolog.New(os.Stdout).With().Logger()
+			procfile := "../demo/Procfile"
+			envfile := "../demo/.env"
+
+			ginit := NewGinitService(procfile, envfile, []string{"test"}, logger)
+			err := ginit.Start(context.Background())
+
+			if err != nil {
+				b.Errorf("start ginit service should have no errors")
+			}
+		}
+	})
+}
+
 func TestHelpers(t *testing.T) {
 
 	t.Run("readfile", func(t *testing.T) {
