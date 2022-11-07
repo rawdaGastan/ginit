@@ -20,7 +20,7 @@ func Readfile(path string) (string, error) {
 func Loadenv(content string) []string {
 	envs := []string{}
 	for _, line := range strings.Split(string(content), "\n") {
-		tokens := strings.SplitN(line, "=", 2)
+		tokens := strings.Split(line, "=")
 		if len(tokens) != 2 {
 			continue
 		}

@@ -3,7 +3,7 @@
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-		<title>Go Coverage Report</title>
+		<title>internal: Go Coverage Report</title>
 		<style>
 			body {
 				background: black;
@@ -55,26 +55,334 @@
 			<div id="nav">
 				<select id="files">
 				
+				<option value="file0">github.com/rawdaGastan/ginit/internal/ginit.go (96.0%)</option>
+				
+				<option value="file1">github.com/rawdaGastan/ginit/internal/helpers.go (100.0%)</option>
+				
+				<option value="file2">github.com/rawdaGastan/ginit/internal/proc.go (84.2%)</option>
+				
 				</select>
 			</div>
 			<div id="legend">
 				<span>not tracked</span>
 			
-				<span class="cov0">no coverage</span>
-				<span class="cov1">low coverage</span>
-				<span class="cov2">*</span>
-				<span class="cov3">*</span>
-				<span class="cov4">*</span>
-				<span class="cov5">*</span>
-				<span class="cov6">*</span>
-				<span class="cov7">*</span>
-				<span class="cov8">*</span>
-				<span class="cov9">*</span>
-				<span class="cov10">high coverage</span>
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
 			
 			</div>
 		</div>
 		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package internal
+
+import (
+        "context"
+        "errors"
+        "os"
+        "os/exec"
+        "os/signal"
+        "syscall"
+
+        "github.com/rs/zerolog"
+)
+
+type ProcInstance struct {
+        name    string
+        cmdline string
+        cmd     *exec.Cmd
+        stopped bool
+}
+
+type GinitService struct {
+        procfile string `yaml:"procfile"`
+        envfile  string
+        procs    []*ProcInstance
+
+        // args are the specidied procs coming after start cmd, for example: start web
+        args []string
+
+        exitOnError bool
+        sig         chan os.Signal
+        logger      zerolog.Logger
+        env         []string
+}
+
+// NewGinitService creates new instance from the GinitService
+func NewGinitService(procfile string, envfile string, args []string, logger zerolog.Logger) GinitService <span class="cov8" title="1">{
+        sig := make(chan os.Signal, 10)
+        signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP)
+
+        return GinitService{
+                procfile:    procfile,
+                envfile:     envfile,
+                args:        args,
+                exitOnError: true,
+                sig:         sig,
+                logger:      logger,
+                env:         os.Environ(),
+        }
+}</span>
+
+// For start command
+func (gs *GinitService) Start(ctx context.Context) error <span class="cov8" title="1">{
+        // read procfile
+        content, err := Readfile(gs.procfile)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">gs.procs, err = LoadProcfile(content)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        // read envfile
+        <span class="cov8" title="1">content, err = Readfile(gs.envfile)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">gs.env = append(gs.env, Loadenv(content)...)
+
+        // start
+        ctx, cancel := context.WithCancel(ctx)
+        defer cancel()
+
+        if len(gs.args) &gt; 0 </span><span class="cov8" title="1">{
+                saveProcs := make([]*ProcInstance, 0, len(gs.args))
+                for _, procName := range gs.args </span><span class="cov8" title="1">{
+                        proc := gs.getProc(procName)
+                        if proc == nil </span><span class="cov8" title="1">{
+                                return errors.New("proc is not found: " + procName)
+                        }</span>
+                        <span class="cov8" title="1">saveProcs = append(saveProcs, proc)</span>
+                }
+                <span class="cov8" title="1">gs.procs = saveProcs</span>
+        }
+
+        <span class="cov8" title="1">procsErr := gs.startProcs()
+        return procsErr</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package internal
+
+import (
+        "errors"
+        "os"
+        "strings"
+)
+
+// load files
+func Readfile(path string) (string, error) <span class="cov8" title="1">{
+        content, err := os.ReadFile(path)
+        if err != nil </span><span class="cov8" title="1">{
+                return "", err
+        }</span>
+
+        <span class="cov8" title="1">return string(content), nil</span>
+}
+
+// parse env file content
+func Loadenv(content string) []string <span class="cov8" title="1">{
+        envs := []string{}
+        for _, line := range strings.Split(string(content), "\n") </span><span class="cov8" title="1">{
+                tokens := strings.Split(line, "=")
+                if len(tokens) != 2 </span><span class="cov8" title="1">{
+                        continue</span>
+                }
+                <span class="cov8" title="1">key, value := strings.TrimSpace(tokens[0]), strings.TrimSpace(tokens[1])
+                envs = append(envs, key+"="+value)</span>
+        }
+        <span class="cov8" title="1">return envs</span>
+}
+
+// it parses the procfile and converts it to a list of procs
+func LoadProcfile(content string) ([]*ProcInstance, error) <span class="cov8" title="1">{
+
+        procs := []*ProcInstance{}
+        for _, line := range strings.Split(string(content), "\n") </span><span class="cov8" title="1">{
+                tokens := strings.SplitN(line, ":", 2)
+                if len(tokens) != 2 || tokens[0][0] == '#' </span><span class="cov8" title="1">{
+                        continue</span>
+                }
+                <span class="cov8" title="1">key, value := strings.TrimSpace(tokens[0]), strings.TrimSpace(tokens[1])
+
+                proc := &amp;ProcInstance{name: key, cmdline: value}
+                procs = append(procs, proc)</span>
+        }
+
+        <span class="cov8" title="1">if len(procs) == 0 </span><span class="cov8" title="1">{
+                return procs, errors.New("invalid entry, no procs found")
+        }</span>
+
+        <span class="cov8" title="1">return procs, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package internal
+
+import (
+        "errors"
+        "fmt"
+        "os"
+        "os/exec"
+        "sync"
+        "time"
+)
+
+// getProc gets the proc intance using its name
+func (gs *GinitService) getProc(name string) *ProcInstance <span class="cov8" title="1">{
+        for _, proc := range gs.procs </span><span class="cov8" title="1">{
+                if proc.name == name </span><span class="cov8" title="1">{
+                        return proc
+                }</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+// start specified proc. if proc is started already, return nil.
+func (gs *GinitService) startProc(name string, wg *sync.WaitGroup, errCh chan&lt;- error) error <span class="cov8" title="1">{
+        proc := gs.getProc(name)
+        if proc == nil </span><span class="cov0" title="0">{
+                return errors.New("unknown name: " + name)
+        }</span>
+
+        <span class="cov8" title="1">if proc.cmd != nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+
+        <span class="cov8" title="1">if wg != nil </span><span class="cov8" title="1">{
+                wg.Add(1)
+        }</span>
+        <span class="cov8" title="1">go func() </span><span class="cov8" title="1">{
+                gs.spawnProc(name, errCh)
+                if wg != nil </span><span class="cov8" title="1">{
+                        wg.Done()
+                }</span>
+        }()
+        <span class="cov8" title="1">return nil</span>
+}
+
+// spawnProc starts the specified proc, and returns any error from running it.
+func (gs *GinitService) spawnProc(name string, errCh chan&lt;- error) <span class="cov8" title="1">{
+        proc := gs.getProc(name)
+
+        gs.logger.Info().Msg("\nexecuting " + proc.cmdline + "\n")
+
+        cmdToExecute := []string{"-c", proc.cmdline}
+
+        cmd := exec.Command("/bin/sh", cmdToExecute...)
+
+        cmd.Env = gs.env
+        cmd.Stdin = nil
+        cmd.Stdout = gs.logger
+        cmd.Stderr = gs.logger
+
+        if err := cmd.Start(); err != nil </span><span class="cov0" title="0">{
+                select </span>{
+                case errCh &lt;- err:<span class="cov0" title="0"></span>
+                default:<span class="cov0" title="0"></span>
+                }
+                <span class="cov0" title="0">gs.logger.Error().Msg("failed to start " + name + ": " + fmt.Sprint(err) + "\n")
+                return</span>
+        }
+
+        <span class="cov8" title="1">proc.cmd = cmd
+        proc.stopped = false
+
+        err := cmd.Wait()
+        if err != nil &amp;&amp; !proc.stopped </span><span class="cov8" title="1">{
+                select </span>{
+                case errCh &lt;- err:<span class="cov8" title="1"></span>
+                default:<span class="cov0" title="0"></span>
+                }
+        }
+
+        // proc cmd is done
+        <span class="cov8" title="1">proc.cmd = nil
+        gs.logger.Info().Msg("terminating " + name + "\n")</span>
+}
+
+// Stop the specified proc, If signal is nil, os.Interrupt is used.
+func (gs *GinitService) stopProc(name string, signal os.Signal) error <span class="cov8" title="1">{
+        if signal == nil </span><span class="cov8" title="1">{
+                signal = os.Interrupt
+        }</span>
+
+        <span class="cov8" title="1">proc := gs.getProc(name)
+        if proc == nil </span><span class="cov0" title="0">{
+                return errors.New("not found proc: " + name)
+        }</span>
+
+        <span class="cov8" title="1">if proc.cmd == nil </span><span class="cov8" title="1">{
+                return nil
+        }</span>
+        <span class="cov8" title="1">proc.stopped = true
+
+        err := proc.cmd.Process.Signal(signal)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">timeout := time.AfterFunc(10*time.Second, func() </span><span class="cov0" title="0">{
+                if proc.cmd != nil </span><span class="cov0" title="0">{
+                        err = proc.cmd.Process.Kill()
+                }</span>
+        })
+        <span class="cov8" title="1">timeout.Stop()
+        return err</span>
+}
+
+// stopProcs attempts to stop every running process,
+// stopProcs will wait until all procs have had an opportunity to stop.
+func (gs *GinitService) stopProcs(sig os.Signal) error <span class="cov8" title="1">{
+        var err error
+        for _, proc := range gs.procs </span><span class="cov8" title="1">{
+                stopErr := gs.stopProc(proc.name, sig)
+                if stopErr != nil </span><span class="cov0" title="0">{
+                        err = stopErr
+                }</span>
+        }
+        <span class="cov8" title="1">return err</span>
+}
+
+// spawn all procs
+func (gs *GinitService) startProcs() error <span class="cov8" title="1">{
+        var wg sync.WaitGroup
+        errCh := make(chan error, 1)
+
+        for _, proc := range gs.procs </span><span class="cov8" title="1">{
+                err := gs.startProc(proc.name, &amp;wg, errCh)
+
+                if err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+        }
+
+        <span class="cov8" title="1">allProcsDone := make(chan bool, 1)
+        go func() </span><span class="cov8" title="1">{
+                wg.Wait()
+                allProcsDone &lt;- true
+        }</span>()
+
+        <span class="cov8" title="1">for </span><span class="cov8" title="1">{
+                select </span>{
+                case err := &lt;-errCh:<span class="cov8" title="1">
+                        if gs.exitOnError </span><span class="cov8" title="1">{
+                                stopErr := gs.stopProcs(os.Interrupt)
+                                if stopErr != nil </span><span class="cov0" title="0">{
+                                        return stopErr
+                                }</span>
+                                <span class="cov8" title="1">return err</span>
+                        }
+                case &lt;-allProcsDone:<span class="cov8" title="1">
+                        return gs.stopProcs(os.Interrupt)</span>
+                case sig := &lt;-gs.sig:<span class="cov8" title="1">
+                        return gs.stopProcs(sig)</span>
+                }
+        }
+}
+</pre>
 		
 		</div>
 	</body>
