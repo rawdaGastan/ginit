@@ -1,6 +1,16 @@
 version: "3"
 
 tasks:
+    run: 
+        desc: Run the app
+        cmds:
+        - GOFLAGS=-mod=mod go run main.go
+        
+    build: 
+        desc: build the CLI app
+        cmds:
+        - go build -o bin/ginit main.go 
+
     test:
         desc: Test the app
         cmds:
@@ -38,6 +48,7 @@ tasks:
         - go run honnef.co/go/tools/cmd/staticcheck -- ./...
   
     clean:
-        desc: Remove all coverage files
+        desc: Remove all coverage and bin files
         cmds:
         - rm ./coverage -rf
+        - rm ./bin -rf

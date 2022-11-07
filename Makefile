@@ -54,5 +54,12 @@ coverage: clean
 testrace: verifiers
 	go test -v -race -vet=off ./...
 
+run: 
+	go run main.go
+	
+build: 
+	go build -o bin/ginit main.go 
+	
 clean:
 	rm ./coverage -rf
+	rm ./bin -rf
