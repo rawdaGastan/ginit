@@ -30,6 +30,8 @@ type GinitService struct {
 	sig         chan os.Signal
 	logger      zerolog.Logger
 	env         []string
+
+	ctx context.Context
 }
 
 // NewGinitService creates new instance from the GinitService
@@ -70,6 +72,7 @@ func (gs *GinitService) Start(ctx context.Context) error {
 
 	// start
 	ctx, cancel := context.WithCancel(ctx)
+	gs.ctx = ctx
 	defer cancel()
 
 	if len(gs.args) > 0 {
