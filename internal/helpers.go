@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// load files
+// Readfile load files
 func Readfile(path string) (string, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -16,7 +16,7 @@ func Readfile(path string) (string, error) {
 	return string(content), nil
 }
 
-// parse env file content
+// Loadenv parses env file content
 func Loadenv(content string) []string {
 	envs := []string{}
 	for _, line := range strings.Split(string(content), "\n") {
@@ -30,7 +30,7 @@ func Loadenv(content string) []string {
 	return envs
 }
 
-// it parses the procfile and converts it to a list of procs
+// LoadProcfile parses the procfile and converts it to a list of procs
 func LoadProcfile(content string) ([]*ProcInstance, error) {
 
 	procs := []*ProcInstance{}

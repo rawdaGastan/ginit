@@ -223,7 +223,7 @@ func TestService(t *testing.T) {
 		err := cmd.Start()
 
 		if err != nil {
-			t.Errorf("an error occured %v", err)
+			t.Errorf("an error occurred %v", err)
 		}
 
 		procs := []*ProcInstance{{name: "test", cmdline: "echo", cmd: cmd}}

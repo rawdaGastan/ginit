@@ -5,18 +5,18 @@ revision=$(shell git rev-parse HEAD)
 dirty=$(shell test -n "`git diff --shortstat 2> /dev/null | tail -n1`" && echo "*")
 ldflags='-w -s -X $(version).Branch=$(branch) -X $(version).Revision=$(revision) -X $(version).Dirty=$(dirty)'
 
-all: getdeps test
+all: getverifiers test
 
-getdeps:
-	@echo "Installing gocyclo" && go get  -u github.com/fzipp/gocyclo/cmd/gocyclo
-	@echo "Installing deadcode" && go get -u github.com/remyoudompheng/go-misc/deadcode
-	@echo "Installing misspell" && go get -u github.com/client9/misspell/cmd/misspell
-	@echo "Installing golangci-lint" && curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${GOPATH}/bin v1.50.1
-	@curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.50.1
-	@wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.50.1
-
+getverifiers:
+	@echo "Installing staticcheck" && go get -u honnef.co/go/tools/cmd/staticcheck && go install honnef.co/go/tools/cmd/staticcheck
+	@echo "Installing gocyclo" && go get -u github.com/fzipp/gocyclo/cmd/gocyclo && go install github.com/fzipp/gocyclo/cmd/gocyclo
+	@echo "Installing deadcode" && go get -u github.com/remyoudompheng/go-misc/deadcode && go install github.com/remyoudompheng/go-misc/deadcode
+	@echo "Installing misspell" && go get -u github.com/client9/misspell/cmd/misspell && go install github.com/client9/misspell/cmd/misspell
+	@echo "Installing golangci-lint" && go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45
 
 verifiers: fmt lint cyclo deadcode spelling staticcheck
+
+checks: verifiers
 
 fmt:
 	@echo "Running $@"
@@ -35,10 +35,12 @@ deadcode:
 	@${GOPATH}/bin/deadcode -test $(shell go list ./...) || true
 
 spelling:
+	@echo "Running $@"
 	@${GOPATH}/bin/misspell -i monitord -error `find .`
 
 staticcheck:
-	go run honnef.co/go/tools/cmd/staticcheck -- ./...
+	@echo "Running $@"
+	@${GOPATH}/bin/staticcheck -- ./...
 
 test: verifiers
 	go test -v -vet=off ./...

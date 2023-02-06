@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// ProcInstance is the proc line inside a procfile
 type ProcInstance struct {
 	name    string
 	cmdline string
@@ -18,6 +19,7 @@ type ProcInstance struct {
 	stopped bool
 }
 
+// GinitService for the service of ginit
 type GinitService struct {
 	procfile string `yaml:"procfile"`
 	envfile  string
@@ -50,7 +52,7 @@ func NewGinitService(procfile string, envfile string, args []string, logger zero
 	}
 }
 
-// For start command
+// Start for start command
 func (gs *GinitService) Start(ctx context.Context) error {
 	// read procfile
 	content, err := Readfile(gs.procfile)
