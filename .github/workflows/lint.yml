@@ -1,4 +1,4 @@
-name: Go GitHub Actions 
+name: lint
 
 on: 
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ "main", "development" ]
 
 jobs:
-  Explore-Packge:
+  Explore-Package:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
@@ -28,8 +28,3 @@ jobs:
         uses: Jerome1337/gofmt-action@v1.0.4
         with:
           gofmt-flags: '-l -d'
-       
-      - name: Test
-        run: go test -v ./...
-  
-

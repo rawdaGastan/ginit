@@ -23,7 +23,7 @@ type GinitService struct {
 	envfile  string
 	procs    []*ProcInstance
 
-	// args are the specidied procs coming after start cmd, for example: start web
+	// args are the specified procs coming after start cmd, for example: start web
 	args []string
 
 	exitOnError bool

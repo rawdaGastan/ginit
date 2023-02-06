@@ -7,7 +7,29 @@ It only supports GNU/Linux
 
 ## How to use
 
-- There is a demo folder in the project you can use:
+- Get the binary
+
+> Download the latest from the [releases page](https://github.com/rawdaGastan/ginit/releases)
+
+- Extract the downloaded ginit
+
+After downloading the binary, run the following command inside the extracted folder:
+
+```bash
+sudo cp ginit /usr/local/bin
+```
+
+- Run the following command wherever your project exists given `Procfile` and `.env` file
+
+```bash
+ginit start -f Procfile -e .env`
+```
+
+## Run the demo using the installed ginit
+
+- Run cmd `ginit start -f demo/Procfile -e demo/.env`
+
+## Run the demo locally
 
 - build `task build` or `make build`
 
